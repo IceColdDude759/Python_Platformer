@@ -13,15 +13,16 @@ level = 0
 ##############################################################################
 ##############################################################################
 
-screen_width = 800
+screen_width = 780
 screen_height = 450
+tile_size = 30
 map_size = screen_width * 5
 
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('aNI ')
 
 #define game variables
-tile_size = 25
+#tile_size = 25
 no_of_tile=screen_width/tile_size
 #layer=int(screen_height/tile_size)
 no_of_tile=screen_width//tile_size
@@ -62,7 +63,7 @@ def draw_grid():
 
 class Player():
 	def __init__(self,x,y): 
-		self.image = pygame.image.load("img/1guy1.png").convert_alpha()
+		self.image = pygame.image.load("img/player/guy_1.png").convert_alpha()
 		self.image = pygame.transform.scale(self.image, (30, 60))
 		self.surf = pygame.Surface((20, 20))
 		self.rect = self.surf.get_rect(center = (160, 220))
@@ -213,7 +214,7 @@ while run:
 	increment=0
 
 	if player.rect[0]>screen_width:
-		increment=int((player.rect[0]-(screen_width-100))/tile_size)+12
+		increment=int((player.rect[0]-(screen_width-100))/tile_size)+10
 	
 	
 

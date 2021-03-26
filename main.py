@@ -14,9 +14,9 @@ clock = pygame.time.Clock()
 FPS = 60
 
 #some game constant
-screen_width = 800
+screen_width = 780
 screen_height = 450
-tile_size = 25
+tile_size = 32
 level = 0
 total_levels = 2
 
@@ -206,9 +206,9 @@ while run:
 		if event.type == pygame.QUIT:
 			run = False
 
-	#print(clock.get_fps())
+	print(clock.get_fps())
 	pygame.display.update()
-	clock.tick(FPS)
+	#clock.tick(FPS)
 		
 pygame.quit()
 

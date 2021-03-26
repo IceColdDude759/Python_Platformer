@@ -38,8 +38,8 @@ class Player():
 		self.images_left = []
 		self.index = 0
 		for num in range(1, 5):
-			img_right = pygame.image.load(f'img/player/guy{num}.png')
-			img_right = pygame.transform.scale(img_right, (30, 60))
+			img_right = pygame.image.load(f'img/player/guy_{num}.png')
+			img_right = pygame.transform.scale(img_right, (64, 64))
 			img_left = pygame.transform.flip(img_right, True, False)
 			self.images_right.append(img_right)
 			self.images_left.append(img_left)

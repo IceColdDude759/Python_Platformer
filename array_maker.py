@@ -7,11 +7,11 @@ level = 0
 ##############################################################################
 
 height=450
-width_original = 800
+width_original = 780
 ##########length of level
 width = width_original*3
 
-block=25
+block=30
 no_of_row=int(width/block)
 no_of_column=int(height/block)
 
