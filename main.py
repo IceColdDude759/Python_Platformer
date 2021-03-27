@@ -208,7 +208,7 @@ while run:
 
 	print(clock.get_fps())
 	pygame.display.update()
-	#clock.tick(FPS)
+	clock.tick(FPS)
 		
 pygame.quit()
 

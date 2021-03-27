@@ -171,8 +171,8 @@ class Player():
 
 		#draw player onto screen
 		screen.blit(self.image, self.draw_rect)
-		pygame.draw.rect(screen, (255, 255, 255), self.rect, 2)
-		pygame.draw.rect(screen, (255, 255, 255), self.draw_rect, 2)
+		#pygame.draw.rect(screen, (255, 255, 255), self.rect, 2)
+		#pygame.draw.rect(screen, (255, 255, 255), self.draw_rect, 2)
 
 
 		return game_over
