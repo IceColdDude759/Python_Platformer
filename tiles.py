@@ -1,11 +1,9 @@
-import pygame 
-
-
+import pygame, csv, os
 
 
 class Enemy1(pygame.sprite.Sprite):
 
-	def __init__(self, x, y):
+	def __init__(self, x, y,q):
 		pygame.sprite.Sprite.__init__(self)
 		self.images_right = []
 		self.images_left = []
@@ -37,7 +35,7 @@ class Enemy1(pygame.sprite.Sprite):
 		self.direction=False
 		self.tick = 0
 
-	def update(self,x_modifier,tick):
+	def update(self,tick):
 		walk_cooldown = 15
 		self.tick += tick
 
@@ -86,9 +84,10 @@ class Coin(pygame.sprite.Sprite):
 	def __init__(self, x, y,tile_size):
 		pygame.sprite.Sprite.__init__(self)
 		img = pygame.image.load('img/coin.png')
-		self.image = pygame.transform.scale(img, (tile_size//2, tile_size // 2))
+		self.image = pygame.transform.scale(img, (tile_size//2, tile_size//2))
 		self.rect = self.image.get_rect()
-		self.rect.center = (x, y)
+		self.rect.x = x + tile_size//4
+		self.rect.y = y + tile_size//4
 		self.tick = 0
 
 
@@ -113,91 +112,75 @@ class Exit(pygame.sprite.Sprite):
 		self.tick = 0
 
 
-class World():
-	def __init__(self, data, no_of_tile, tile_size, group):
-		self.tile_size = tile_size
-		self.no_of_tile = no_of_tile
-		self.all_tile_list = []
-		self.current_tile_list=[]
+class Tile(pygame.sprite.Sprite):
+	def __init__(self, image, x, y, spritesheet,can_collide):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = spritesheet.get_sprite(image)
+		self.rect = self.image.get_rect()
+		self.rect.x, self.rect.y = x, y
+		self.can_collide = can_collide
+
+	def draw(self, surface):
+		surface.blit(self.image, (self.rect.x, self.rect.y))
 
 
-		#######################load images/texture#####################################
-		#add the same shit in the list before the game loop
-		dirt_img = pygame.image.load('img/dirt3.png')
-		grass_img = pygame.image.load('img/dirt2.png')	
-		
+class TileMap():
+	def __init__(self, filename, spritesheet, engine):
+		self.engine = engine
+		self.tile_size = self.engine.tile_size
+		self.start_x, self.start_y = 0, 0
+		self.spritesheet = spritesheet
+		self.tiles = self.load_tiles(filename)
+		self.map_surface = pygame.Surface((self.map_w, self.map_h))
+		self.map_surface.set_colorkey((0, 0, 0))
+		self.load_map()
 
-		#coin_img = pygame.image.load('img/coin.png')
-		#void_img = pygame.image.load('images.jpg').convert()
-		#lava_img = pygame.image.load('img/lava.png')
+	def draw_world(self):
+		self.engine.screen.blit(self.map_surface, (0 - self.engine.camera.offset.x, 0 - self.engine.camera.offset.y))
+
+	def load_map(self):
+		for tile in self.tiles:
+			tile.draw(self.map_surface)
+
+	def read_csv(self, filename):
+		map = []
+		with open(os.path.join(filename)) as data:
+			data = csv.reader(data, delimiter=',')
+			for row in data:
+				map.append(list(row))
+		return map
+
+	def load_tiles(self, filename):
+		tiles = []
+		map = self.read_csv(filename)
+		x, y = 0, 0
+		for row in map:
+			x = 0
+			for tile in row:
+				if tile == '0':
+					self.start_x, self.start_y = x * self.tile_size, y * self.tile_size
+				elif tile == '1':
+					tiles.append(Tile('dirt2.png', x * self.tile_size, y * self.tile_size, self.spritesheet, True))
+				elif tile == '2':
+					tiles.append(Tile('dirt3.png', x * self.tile_size, y * self.tile_size, self.spritesheet, True))
+				elif tile == '3':
+					self.engine.coin_group.add(Coin(x * self.tile_size, y * self.tile_size,self.tile_size))
+				elif tile == '4':
+					self.engine.exit_group.add(Exit(x * self.tile_size, y * self.tile_size,self.tile_size))
+				elif tile == '6':
+					self.engine.enemy_group.add(Enemy1(x * self.tile_size, y * self.tile_size,self.tile_size))
+				elif tile == '7':
+					self.engine.lava_group.add(Lava(x * self.tile_size, y * self.tile_size,self.tile_size))
+					# Move to next tile in current row
+				x += 1
+
+			# Move to next row
+			y += 1
+			# Store the size of the tile map
+		self.map_w, self.map_h = x * self.tile_size, y * self.tile_size
+		return tiles
 
 
-		strip_count = 0
-		for strip in data:
-			block_count = 0
-			temp_strip=[]
-			for tile in strip:
-				"""if tile == 0:
-					img = pygame.transform.scale(dirt_img, (10,10))
-					img_rect = img.get_rect()
-					img_rect.x = block_count * 10
-					img_rect.y = 0
-					# tile has surface, rect , and bool collide 
-					tile = (img, img_rect, True)
-					temp_strip.append(tile)"""
-				if tile == 1:
-					img = pygame.transform.scale(dirt_img, (self.tile_size, self.tile_size))
-					img_rect = img.get_rect()
-					img_rect.x = strip_count * self.tile_size
-					img_rect.y = block_count * self.tile_size
-					# tile has surface, rect , and bool collide 
-					tile = (img, img_rect, True)
-					temp_strip.append(tile)
 
-				elif tile == 2:
-					img = pygame.transform.scale(grass_img, (self.tile_size, self.tile_size))
-					img_rect = img.get_rect()
-					img_rect.x = strip_count * self.tile_size
-					img_rect.y = block_count * self.tile_size
-					# tile has surface, rect , and bool collide 
-					tile = (img, img_rect, True)
-					temp_strip.append(tile)
 
-				elif tile == 3:
-					lava = Lava(strip_count * self.tile_size, block_count * self.tile_size + (self.tile_size // 2),self.tile_size)
-					group[1].add(lava)
-					
-				elif tile == 4:
-					coin = Coin(strip_count * self.tile_size + (self.tile_size // 2), block_count * self.tile_size + (self.tile_size // 2),self.tile_size)
-					group[2].add(coin)
-
-				elif tile == 5:
-					
-					enemy = Enemy1(strip_count * self.tile_size, block_count * self.tile_size )
-					group[0].add(enemy)
-				
-				elif tile == 6:
-					
-					exit = Exit(strip_count * self.tile_size, block_count * self.tile_size, self.tile_size )
-					group[3].add(exit)
-
-				elif tile == 7:
-					
-					enemy = Enemy2(strip_count * self.tile_size, block_count * self.tile_size, self.tile_size )
-					group[4].add(enemy)
-					
-				block_count += 1
-			self.all_tile_list.append(temp_strip)
-			strip_count += 1
-
-	def draw(self, screen, x_modifier):
-
-		self.current_tile_list = self.all_tile_list[x_modifier:(x_modifier + self.no_of_tile)]
-		#print(self.current_tile_list)
-		
-		for strip in self.current_tile_list:
-			for tile in strip:
-				
-				correct_x=tile[1][0]-(x_modifier*self.tile_size) 
-				screen.blit(tile[0],(correct_x,tile[1][1]))	
 

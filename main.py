@@ -1,214 +1,225 @@
-import pickle
 import pygame
-#from pygame.locals import *
-from pygame import mixer
-from model import *
-from engine import World ,Coin
-
-
-#pygame.mixer.pre_init(44100, -16, 2, 512)
-#mixer.init()
-pygame.init()
-
-clock = pygame.time.Clock()
-FPS = 60
-
-#some game constant
-screen_width = 780
-screen_height = 450
-tile_size = 32
-level = 0
-total_levels = 2
-
-
-flags = pygame.RESIZABLE | pygame.SCALED
-screen = pygame.display.set_mode((screen_width, screen_height), flags)
-pygame.display.set_caption('BUG')
-
-
-#font
-font_1 = pygame.font.SysFont("Verdana", 100, True, True)
-font = pygame.font.SysFont("Verdana", 70, True, True)
-font_coin = pygame.font.SysFont("Verdana", 30)
-
-#define game variables
-player_spawn = (700,200)
-game_over = 0
-no_of_tile=screen_width//tile_size
-middle_tile = no_of_tile//2
-main_menu = False
-coin = 0
-
-
-#define colours
-white = (255, 255, 255)
-blue = (0, 0, 255)
-red  = (20, 230, 255)
-
-
-#load images
-health_img = pygame.image.load('img/heart.png')
-health_img = pygame.transform.scale(health_img,(30,30))
-coin_img = pygame.image.load('img/coin.png')
-coin_img = pygame.transform.scale(coin_img,(20,20))
-bg_img = pygame.image.load('img/backg.png')
-bg_img = pygame.transform.scale(bg_img, (screen_width,screen_height-tile_size*0))
-restart_img = pygame.image.load('img/button/Restart.png')
-restart_img = pygame.transform.scale(restart_img,(80,80))
-start_img = pygame.image.load('img/button/Start.png')
-start_img = pygame.transform.scale(start_img,(200,100))
-exit_img = pygame.image.load('img/button/Exit.png')
-exit_img = pygame.transform.scale(exit_img,(200,100))
-
-#load Sound
-coin_fx = pygame.mixer.Sound('img/coin.wav')
-coin_fx.set_volume(0.5)
-#jump_fx = pygame.mixer.Sound('img/jump.wav')
-#jump_fx.set_volume(0.5)
-#game_over_fx = pygame.mixer.Sound('img/a.mp3')
-#game_over_fx.set_volume(0.4)
-#game_over_fx.play()
-#
+from spritesheetparser import Spritesheet
+from tiles import *
+from camera import *
+from Player import *
+from menu import *
 
 
 
-def draw_text(text, font, colour, x, y):
-	img = font.render(text, True, colour)
-	screen.blit(img, (x, y))
+class Engine():
+	def __init__(self):
+		
+		pygame.init()
+		#pygame.mixer.pre_init(44100, -16, 2, 512)
+		#mixer.init()
+		self.clock = pygame.time.Clock()
+		self.FPS = 60
+		self.running = True
+		self.menu_bol = False
+		self.screen_width, self.screen_height = 800, 480
+		self.tile_size = 32
+		self.flags = pygame.RESIZABLE | pygame.SCALED
+		
+		self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), self.flags)
+		self.title = "A GAME"
+		pygame.display.set_caption(self.title)
 
-def reset_level (level):
-	player.reset(player_spawn[0], player_spawn[1])
-	enemy1_group.empty()
-	lava_group.empty()
-	exit_group.empty()
-	coin_group.empty()
+		
+		self.level = 0
+		self.dt = 0
+		self.menu = False
+		self.health = 4
+		self.coin = 0
+		self.tick = 0
+		
+		self.reset_level(self.level, True)
+		
+		
+		self.init_menu()
+		self.init_keys()
+		self.load()
 
-	#load in level data and create world
-	file=open(f"data{level}.ani","rb")
-	world_data = pickle.load(file)
+
+	def load(self):
+		#load images
+		self.health_img = pygame.image.load('img/heart.png')
+		self.health_img = pygame.transform.scale(self.health_img,(30,30))
+		self.coin_img = pygame.image.load('img/coin.png')
+		self.coin_img = pygame.transform.scale(self.coin_img,(20,20))
+		self.bg_img = pygame.image.load('img/backg.png')
+		self.bg_img = pygame.transform.scale(self.bg_img, (self.screen_width, self.screen_height-self.tile_size*0))
+		self.restart_img = pygame.image.load('img/button/Restart.png')
+		self.restart_img = pygame.transform.scale(self.restart_img,(80,80))
+		self.start_img = pygame.image.load('img/button/Start.png')
+		self.start_img = pygame.transform.scale(self.start_img,(200,100))
+		self.exit_img = pygame.image.load('img/button/Exit.png')
+		self.exit_img = pygame.transform.scale(self.exit_img,(200,100))
+
+		self.font_coin = pygame.font.SysFont("Verdana", 30)
+
+
+
+	def reset_level(self, level, alive):
+		if not(alive) :
+			self.coin = 0
+			self.health = 4
+			
+		self.game_state = 0
+		self.enemy_group = ModifiedGroup(self)
+		self.coin_group = ModifiedGroup(self)
+		self.lava_group = ModifiedGroup(self)
+		self.exit_group = ModifiedGroup(self)
+
+		self.main_tiles = Spritesheet('resources/Blockz')
+		self.world = TileMap(f'map{level}.csv', self.main_tiles, self)
+		self.tiles = self.world.tiles
+		self.left_border = 0
+		self.top_border = 0
+		self.bottom_border = self.world.map_h
+		self.right_border = self.world.map_w
+
+		self.player = Player(self)
+		self.camera = Camera(self)
+		self.follow = Follow(self)
+		self.border = Border(self)
+		self.auto = Auto(self)
+		self.camera.setmethod(self.border)
+		
+		
 	
-	return world_data
-
-
-#for loading levels 
-file=open(f"data{level}.ani","rb")
-world_data = pickle.load(file)
-
-#f.close()
-
-
-player = Player(player_spawn[0], player_spawn[1], tile_size, screen_width, screen_height, middle_tile)
-
-
-enemy1_group = ModifiedGroup(tile_size)
-lava_group = ModifiedGroup(tile_size)
-coin_group = ModifiedGroup(tile_size)
-enemy2_group = ModifiedGroup(tile_size)
-exit_group = ModifiedGroup(tile_size)
-
-
-
-group = [enemy1_group, lava_group, coin_group, exit_group, enemy2_group]
-
-world = World(world_data, no_of_tile, tile_size, group)
-
-restart_button = Button(screen_width // 2 -200, screen_height // 2 , restart_img)
-start_button = Button(screen_width // 2 - 200, screen_height // 2, start_img)
-exit_button = Button(screen_width // 2 + 30, screen_height // 2, exit_img)
-#print(world_data)
-
-
-
-
-run = True
-while run:
-	current_tile_list=world.current_tile_list
-	player_block = player.rect[0] // tile_size
-	x_modifier = player_block - middle_tile
-	if x_modifier < 0:
-		x_modifier = 0
-	
-
-	screen.blit(bg_img, (0, 0))
-	
-	
-	if main_menu :
-		draw_text(' Ani GAME ', font_1, red, 100, 50)
-		if exit_button.draw(screen):
-			run = False
-		if start_button.draw(screen):
-			main_menu = False
-	
-	else :
-		
-		world.draw(screen,x_modifier)
-		
-
-		if game_over == 0:
-			enemy1_group.update(x_modifier, clock.get_time())
-			lava_group.update(clock.get_time())
-
-
-			#update score
-			#check if a coin has been collected
-			if pygame.sprite.spritecollide(player, coin_group, True):
-				coin += 1
-				coin_fx.play()
-			screen.blit(coin_img, (4, 12))
-			draw_text('' + str(coin), font_coin, white, tile_size - 5, 2)
-
-			for i in range(0 ,player.health+1):
-				screen.blit(health_img, (screen_width-(i*30), 10))
-
-
-		
-		enemy1_group.draw(screen, x_modifier)
-		lava_group.draw(screen, x_modifier)
-		coin_group.draw(screen, x_modifier)
-		exit_group.draw(screen, x_modifier)
-
-		
-		game_over = player.update(game_over,x_modifier,current_tile_list,screen,group)
-		
-		#if player has died
-		if game_over == -1:
-			#pygame.mixer.Sound('img/a.mp3').play()
-			draw_text('GAME OVER', font, red, (screen_width // 2) - 240, screen_height // 2 -200)
-			if restart_button.draw(screen):
-				world_data = []
-				world = World(reset_level(level), no_of_tile, tile_size, group)
-				game_over = 0
-				coin = 0
-			if exit_button.draw(screen):
-				run = False
-		
-		#draw_grid()
-		#if player has completed the level
-		if game_over == 1:
-			#reset game and go to next level
-			level += 1
-			if level <= total_levels:
-				#reset level
-				world_data = [] 
-				world = World(reset_level(level), no_of_tile, tile_size, group)
-				game_over = 0
-			else:
-				if restart_button.draw(screen):
-					level = 0
-					#reset level
-					world_data = []
-					world = World(reset_level(level), no_of_tile, tile_size, group)
-					game_over = 0
-					coin = 0
+	def init_menu(self):
+		self.mainmenu = Mainmenu(self)
+		self.deadmenu = Deadmenu(self)
 
 	
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			run = False
+	def init_keys (self):
+		self.LEFT_KEY, self.RIGHT_KEY = False, False
+		self.UP_KEY, self.DOWN_KEY = False, False
+		self.SPACE_KEY = False
 
-	print(clock.get_fps())
-	pygame.display.update()
-	clock.tick(FPS)
+
+	def input(self):
+		for event in pygame.event.get():
+
+			if event.type == pygame.QUIT:
+				self.running = False
+
+				## PROCESS KEYPRESS
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_LEFT:
+					self.LEFT_KEY = True
+				elif event.key == pygame.K_RIGHT:
+					self.RIGHT_KEY = True
+				elif event.key == pygame.K_UP:
+					self.UP_KEY = True
+				elif event.key == pygame.K_DOWN:
+					self.DOWN_KEY = True
+				elif event.key == pygame.K_SPACE:
+					self.SPACE_KEY = True
+
+				## HANDEL CAMERA MOVEMENT	
+				elif event.key == pygame.K_1:
+					self.camera.setmethod(self.follow)
+				elif event.key == pygame.K_2:
+					self.camera.setmethod(self.auto)
+				elif event.key == pygame.K_3:
+					self.camera.setmethod(self.border)
+
+				elif event.key == pygame.K_ESCAPE:
+					self.running = False
+
+			if event.type == pygame.KEYUP:
+				if event.key == pygame.K_LEFT:
+					self.LEFT_KEY = False
+				elif event.key == pygame.K_RIGHT:
+					self.RIGHT_KEY = False
+				elif event.key == pygame.K_UP:
+					self.UP_KEY = False
+				elif event.key == pygame.K_DOWN:
+					self.DOWN_KEY = False
+				elif event.key == pygame.K_SPACE:
+					self.SPACE_KEY = False
+
+
+	def update(self):
 		
-pygame.quit()
+		self.dt = self.clock.tick(60) * .001 * self.FPS 
+		self.tick = self.clock.get_time()
+		#print(self.clock.tick(60))
+		self.player.update()
+		self.camera.scroll()
+		self.enemy_group.update(self.tick)
+		self.lava_group.update(self.tick)
 
+
+	def draw(self):
+		self.screen.blit(self.bg_img, (0, 0))
+		self.world.draw_world()
+		self.enemy_group.draw()
+		self.lava_group.draw()
+		self.coin_group.draw()
+		self.exit_group.draw()
+		self.player.draw()
+		self.draw_hud()
+
+		
+		#pygame.draw.rect(self.screen, (255, 0, 0), self.player.rect, 2)
+		
+
+	def draw_text(self,text, font, colour, x, y):
+		img = font.render(text, True, colour)
+		self.screen.blit(img, (x, y))
+
+
+	def draw_hud(self):
+		self.screen.blit(self.coin_img, (4, 10))
+		self.draw_text('' + str(self.player.coin), self.font_coin, (255,255,255), self.tile_size - 5, 0)
+		for i in range(0 ,self.player.health):
+			self.screen.blit(self.health_img, (self.screen_width-(35+(i*30)), 4))
+
+
+	def mainloop(self):
+
+		self.input()
+
+		if self.menu:
+			self.mainmenu.draw()
+			if self.mainmenu.buttons['Exit'][1]:
+				self.running = False
+			if self.mainmenu.buttons['Start'][1]:
+				self.menu = False
+			if self.mainmenu.buttons['Options'][1]:
+				pass
+		
+		else :
+			self.draw()
+
+			if self.game_state == 0:
+				self.update()
+				self.draw_hud()
+
+			elif self.game_state == -1:
+				self.screen.fill((0,0,0))
+				self.player.draw()
+				self.deadmenu.draw()
+				if self.deadmenu.buttons['Exit'][1]:
+					self.running = False
+				if self.deadmenu.buttons['Restart'][1]:
+					self.reset_level(self.level, False)
+				
+			
+			elif self.game_state == 1:
+				self.coin = self.player.coin
+				self.health = self.player.health
+				self.level += 1
+				self.reset_level(self.level,True)
+
+		pygame.display.update()
+
+
+if __name__ == "__main__":
+	engine = Engine()
+	while engine.running :
+		engine.mainloop()
+		
