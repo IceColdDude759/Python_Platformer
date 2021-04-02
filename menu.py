@@ -70,6 +70,7 @@ class Deadmenu(Menu):
 		self.colour = (170, 255, 255)
 		self.add('Exit', 550, 250)
 		self.add('Restart', 170, 250)
+		
 
 
 

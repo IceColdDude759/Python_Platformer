@@ -15,7 +15,8 @@ class Player(pygame.sprite.Sprite):
 	def __init__(self,engine):
 		pygame.sprite.Sprite.__init__(self)
 		self.engine = engine
-		self.is_jumping, self.on_ground = False, False
+		self.is_jumping, self.on_ground = True,True
+		#False, False
 		self.facing_right = True
 		self.gravity, self.friction = .35, -.09
 		self.load()
@@ -66,8 +67,9 @@ class Player(pygame.sprite.Sprite):
 
 		if self.engine.game_state == -1:
 			#death animeation
+			death=self.position.y
 			self.loop_delay = not(self.loop_delay)
-			if self.rect.y > 50 and self.loop_delay:
+			if self.rect.y > death-200 and self.loop_delay:
 				self.image = self.dead_img
 				self.rect.y -= 1
 		else :

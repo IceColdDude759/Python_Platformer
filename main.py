@@ -26,10 +26,10 @@ class Engine():
 		pygame.display.set_caption(self.title)
 
 		
-		self.level = 0
+		self.level = 2
 		self.dt = 0
-		self.menu = True
-		self.health = 4
+		self.menu = False
+		self.health = 15
 		self.coin = 0
 		self.tick = 0
 		
@@ -47,7 +47,7 @@ class Engine():
 		self.health_img = pygame.transform.scale(self.health_img,(30,30))
 		self.coin_img = pygame.image.load('img/coin.png')
 		self.coin_img = pygame.transform.scale(self.coin_img,(20,20))
-		self.bg_img = pygame.image.load('img/backg.png')
+		self.bg_img = pygame.image.load('resources/back.png').convert()
 		self.bg_img = pygame.transform.scale(self.bg_img, (self.screen_width, self.screen_height-self.tile_size*0))
 		self.restart_img = pygame.image.load('img/button/Restart.png')
 		self.restart_img = pygame.transform.scale(self.restart_img,(80,80))
@@ -63,7 +63,7 @@ class Engine():
 	def reset_level(self, level, alive):
 		if not(alive) :
 			self.coin = 0
-			self.health = 4
+			self.health = self.health
 			
 		self.game_state = 0
 		self.enemy_group = ModifiedGroup(self)
