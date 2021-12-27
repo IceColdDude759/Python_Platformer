@@ -29,7 +29,7 @@ class Engine():
 		self.level = 2
 		self.dt = 0
 		self.menu = False
-		self.health = 15
+		self.health = 3
 		self.coin = 0
 		self.tick = 0
 		
