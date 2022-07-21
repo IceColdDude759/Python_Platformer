@@ -44,6 +44,8 @@ python main.py
 
 That's All !!!
 
+**Use Arrow Keys to move and Space to JUMP**
+
 **macOS Users & linux Users:** Python_Platformer is only test on windows, so There might be some issues ...
 
 
