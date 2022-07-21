@@ -58,8 +58,8 @@ class Mainmenu(Menu):
 		self.font = pygame.font.SysFont("Verdana", 30, True, True)
 		self.colour = (170, 255, 255)
 		self.add('Ani GAME', 320, 50)
-		self.add('Start', 370, 150)
-		self.add('Options',340,250)
+		self.add('Start', 370, 250)
+
 		self.add('Exit', 370, 350)
 
 

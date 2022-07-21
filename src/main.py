@@ -22,13 +22,13 @@ class Engine():
 		self.flags = pygame.RESIZABLE | pygame.SCALED
 		
 		self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), self.flags)
-		self.title = "A GAME"
+		self.title = "Ani GAME"
 		pygame.display.set_caption(self.title)
 
 		
 		self.level = 1
 		self.dt = 0
-		self.menu = False
+		self.menu = True
 		self.health = 3
 		self.coin = 0
 		self.tick = 0
@@ -189,9 +189,7 @@ class Engine():
 				self.running = False
 			if self.mainmenu.buttons['Start'][1]:
 				self.menu = False
-			if self.mainmenu.buttons['Options'][1]:
-				pass
-		
+			
 		else :
 			self.draw()
 
@@ -213,7 +211,12 @@ class Engine():
 				self.coin = self.player.coin
 				self.health = self.player.health
 				self.level += 1
-				self.reset_level(self.level,True)
+				if self.level > 2:
+					self.level = 1
+					self.menu=True
+					self.screen.blit(self.bg_img, (0, 0))
+				else:
+					self.reset_level(self.level,True)
 
 		pygame.display.update()
 
