@@ -26,7 +26,7 @@ class Engine():
 		pygame.display.set_caption(self.title)
 
 		
-		self.level = 2
+		self.level = 1
 		self.dt = 0
 		self.menu = False
 		self.health = 3
