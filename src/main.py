@@ -49,6 +49,8 @@ class Engine():
 		self.coin_img = pygame.transform.scale(self.coin_img,(20,20))
 		self.bg_img = pygame.image.load('resources/back.png').convert()
 		self.bg_img = pygame.transform.scale(self.bg_img, (self.screen_width, self.screen_height-self.tile_size*0))
+		self.bg_img_menu = pygame.image.load('img/Backg.png').convert()
+		self.bg_img_menu = pygame.transform.scale(self.bg_img_menu, (self.screen_width, self.screen_height-self.tile_size*0))
 		self.restart_img = pygame.image.load('img/button/Restart.png')
 		self.restart_img = pygame.transform.scale(self.restart_img,(80,80))
 		self.start_img = pygame.image.load('img/button/Start.png')
@@ -184,6 +186,7 @@ class Engine():
 		self.input()
 
 		if self.menu:
+			self.screen.blit(self.bg_img_menu, (0, 0))
 			self.mainmenu.draw()
 			if self.mainmenu.buttons['Exit'][1]:
 				self.running = False
@@ -214,7 +217,6 @@ class Engine():
 				if self.level > 2:
 					self.level = 1
 					self.menu=True
-					self.screen.blit(self.bg_img, (0, 0))
 				else:
 					self.reset_level(self.level,True)
 

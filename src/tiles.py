@@ -66,7 +66,7 @@ class Lava(pygame.sprite.Sprite):
 	def __init__(self, x, y,tile_size):
 		pygame.sprite.Sprite.__init__(self)
 		img = pygame.image.load('img/lava.png')
-		self.image = pygame.transform.scale(img, (tile_size, tile_size // 2))
+		self.image = pygame.transform.scale(img, (tile_size, tile_size))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
@@ -122,7 +122,17 @@ class Tile(pygame.sprite.Sprite):
 
 	def draw(self, surface):
 		surface.blit(self.image, (self.rect.x, self.rect.y))
+		
+class TileImg(pygame.sprite.Sprite):
+	def __init__(self, image, x, y, can_collide):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load("resources/"+image)
+		self.rect = self.image.get_rect()
+		self.rect.x, self.rect.y = x, y
+		self.can_collide = can_collide
 
+	def draw(self, surface):
+		surface.blit(self.image, (self.rect.x, self.rect.y))
 
 class TileMap():
 	def __init__(self, filename, spritesheet, engine):
@@ -171,7 +181,9 @@ class TileMap():
 					self.engine.enemy_group.add(Enemy1(x * self.tile_size, y * self.tile_size,self.tile_size))
 				elif tile == '7':
 					self.engine.lava_group.add(Lava(x * self.tile_size, y * self.tile_size,self.tile_size))
-					# Move to next tile in current row
+				elif tile == '8':
+					tiles.append(TileImg('lavaa.png', x * self.tile_size, y * self.tile_size, False))
+				# Move to next tile in current row
 				x += 1
 
 			# Move to next row
